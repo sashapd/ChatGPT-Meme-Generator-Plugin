@@ -1,0 +1,35 @@
+openapi: 3.0.1
+info:
+  title: Meme generation Plugin
+  description: A plugin that allows the user to generate memes using ChatGPT.
+  version: 'v1'
+servers:
+  - url: http://localhost:5003
+paths:
+  /generate_meme:
+    post:
+      operationId: generateMeme
+      summary: Generate meme
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                memeTemplateName:
+                  type: string
+                  description: The name of the meme template. Leave empty if unclear, but try to guess if possible.
+                  default: ''
+                memeText:
+                  type: string
+                  description: The text of the meme. If user did not specify exactly, creatively make your own based on user wishes. 2 Lines by default separated by newline.
+                memeUseCase:
+                  type: string
+                  description: Generic scenario for the meme that applies to every instance of the meme image itself. Example for "I'm a Simple Man" meme template that would be "express one's appreciation for things of ordinary nature". Leave empty if unclear.
+                  default: ''
+              required:
+                - memeText
+      responses:
+        "200":
+          description: OK

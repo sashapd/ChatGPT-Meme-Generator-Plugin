@@ -1,0 +1,19 @@
+{
+    "schema_version": "v1",
+    "name_for_human": "Meme Generator",
+    "name_for_model": "MemeGenerator",
+    "description_for_human": "A plugin that allows the user to generate memes.",
+    "description_for_model": "A plugin that allows the user to generate memes.",
+    "auth": {
+      "type": "none"
+    },
+    "api": {
+      "type": "openapi",
+      "url": "http://localhost:5003/openapi.yaml",
+      "is_user_authenticated": false
+    },
+    "logo_url": "http://localhost:5003/logo.png",
+    "contact_email": "legal@example.com",
+    "legal_info_url": "http://example.com/legal"
+  }
+  
