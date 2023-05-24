@@ -187,6 +187,10 @@ async def openapi_spec():
         text = f.read()
         return quart.Response(text, mimetype="text/yaml")
 
+@app.route('/legal')
+async def serve_disclaimer():
+    return await quart.send_from_directory(directory='.', file_name='legal_info.html')
+
 def main():
     app.run(debug=True, host="0.0.0.0", port=5003)
 
