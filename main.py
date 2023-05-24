@@ -32,11 +32,7 @@ with open(embedding_cache_path, "wb") as embedding_cache_file:
     pickle.dump(embedding_cache, embedding_cache_file)
 
 # define a function to retrieve embeddings from the cache if present, and otherwise request via the API
-def embedding_from_string(
-    string: str,
-    model: str = EMBEDDING_MODEL,
-    embedding_cache=embedding_cache
-) -> list:
+def embedding_from_string(string, model = EMBEDDING_MODEL, embedding_cache=embedding_cache):
     """Return embedding of given string, using a cache to avoid recomputing."""
     if (string, model) not in embedding_cache.keys():
         #Just in case for testing deployment
@@ -46,14 +42,7 @@ def embedding_from_string(
             pickle.dump(embedding_cache, embedding_cache_file)
     return embedding_cache[(string, model)]
 
-def get_meme_from_strings(
-    names: list[str],
-    examples: list[str],
-    query_name: str,
-    query_example: str,
-    k_nearest_neighbors: int = 1,
-    model=EMBEDDING_MODEL,
-) -> list[int]:
+def get_meme_from_strings(names, examples, query_name, query_example, k_nearest_neighbors, model=EMBEDDING_MODEL):
     """Print out the k nearest neighbors of a given string."""
 
     # get embeddings for all examples

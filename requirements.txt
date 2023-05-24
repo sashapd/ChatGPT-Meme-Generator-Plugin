@@ -3,3 +3,7 @@ quart-cors
 openai
 pandas
 gevent>=1.4
+matplotlib
+scipy
+scikit-learn
+plotly
