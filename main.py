@@ -35,8 +35,7 @@ with open(embedding_cache_path, "wb") as embedding_cache_file:
 def embedding_from_string(string, model = EMBEDDING_MODEL, embedding_cache=embedding_cache):
     """Return embedding of given string, using a cache to avoid recomputing."""
     if (string, model) not in embedding_cache.keys():
-        #Just in case for testing deployment
-        #embedding_cache[(string, model)] = get_embedding(string, model)
+        embedding_cache[(string, model)] = get_embedding(string, model)
         print("CALCULATING EMBEDDING!!!!!")
         with open(embedding_cache_path, "wb") as embedding_cache_file:
             pickle.dump(embedding_cache, embedding_cache_file)
