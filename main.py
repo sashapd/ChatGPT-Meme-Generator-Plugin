@@ -156,10 +156,15 @@ async def generate_meme():
     logger.info(request["memeTemplateName"])
     if "memeUseCase" in request.keys():
         logger.info(request["memeUseCase"])
+    logger.info("Getting meme id")
     meme_id = get_meme_id(request["memeText"], request["memeTemplateName"])
+    logger.info("Generating link")
     link = await generate_meme_link_from_id(meme_id, request["memeText"])
+    logger.info("Returning response")
     if link is None:
+        logger.info("Response: fail")
         return quart.Response(response='BAD', status=400)
+    logger.info("Response: success")
     return quart.jsonify({"meme_link": link}), 200
 
 @app.get("/logo.png")
