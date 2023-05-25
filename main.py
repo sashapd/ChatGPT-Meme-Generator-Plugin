@@ -43,8 +43,10 @@ with open(embedding_cache_path, "wb") as embedding_cache_file:
 def embedding_from_string(string, model = EMBEDDING_MODEL, embedding_cache=embedding_cache):
     """Return embedding of given string, using a cache to avoid recomputing."""
     if (string, model) not in embedding_cache.keys():
-        embedding_cache[(string, model)] = get_embedding(string, model)
-        logger.info("CALCULATING EMBEDDING!!!!!")
+        logger.warning("Started get_embedding!")
+        embedding = get_embedding(string, model)
+        logger.warning("Ending get_embedding!")
+        embedding_cache[(string, model)] = embedding 
         #with open(embedding_cache_path, "wb") as embedding_cache_file:
         #    pickle.dump(embedding_cache, embedding_cache_file)
     return embedding_cache[(string, model)]
@@ -142,14 +144,18 @@ app = quart_cors.cors(quart.Quart(__name__), allow_origin="*")
 async def generate_meme():
     request = await quart.request.get_json(force=True)
     logger.info("===")
-    logger.info(request["memeText"])
-    logger.info(request["memeTemplateName"])
-    if "memeUseCase" in request.keys():
-        logger.info(request["memeUseCase"])
+    memeText = request["memeText"]
+    logger.info(memeText)
+    if "memeTemplateName" in request:
+        memeTemplateName = request["memeTemplateName"]
+    else:
+        memeTemplateName = ""
+    logger.info("Meme Template: ")
+    logger.info(memeTemplateName)
     logger.info("Getting meme id")
-    meme_id = get_meme_id(request["memeText"], request["memeTemplateName"])
+    meme_id = get_meme_id(memeText, memeTemplateName)
     logger.info("Generating link")
-    link = await generate_meme_link_from_id(meme_id, request["memeText"])
+    link = await generate_meme_link_from_id(meme_id, memeText)
     logger.info("Returning response")
     if link is None:
         logger.info("Response: fail")
