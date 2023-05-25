@@ -8,6 +8,9 @@ from quart import request
 import pandas as pd
 import pickle
 
+logging.basicConfig(level=logging.INFO)  # or DEBUG, ERROR, WARNING, etc.
+logger = logging.getLogger(__name__)
+
 from openai.embeddings_utils import (
     get_embedding,
     distances_from_embeddings,
@@ -37,16 +40,16 @@ def embedding_from_string(string, model = EMBEDDING_MODEL, embedding_cache=embed
     """Return embedding of given string, using a cache to avoid recomputing."""
     if (string, model) not in embedding_cache.keys():
         embedding_cache[(string, model)] = get_embedding(string, model)
-        print("CALCULATING EMBEDDING!!!!!")
+        logger.info("CALCULATING EMBEDDING!!!!!")
         #with open(embedding_cache_path, "wb") as embedding_cache_file:
         #    pickle.dump(embedding_cache, embedding_cache_file)
     return embedding_cache[(string, model)]
 
 def get_meme_from_strings(names, examples, query_name, query_example, k_nearest_neighbors, model=EMBEDDING_MODEL):
-    """Print out the k nearest neighbors of a given string."""
+    """logger.info out the k nearest neighbors of a given string."""
 
     # get embeddings for all examples
-    example_embeddings = [embedding_from_string(example, model=model) for example in examples]
+    example_embeddings = [embedding_from_string(example, model, embedding_cache) for example in examples]
 
     # get the embedding of the source example
     query_example_embedding = embedding_from_string(query_example, model=model)
@@ -71,22 +74,22 @@ def get_meme_from_strings(names, examples, query_name, query_example, k_nearest_
     # get indices of nearest neighbors (function from embeddings_utils.py)
     indices_of_nearest_neighbors = indices_of_nearest_neighbors_from_distances(distances)
 
-    # print out source string
-    print(f"Source string: {query_name} {query_example}")
+    # logger.info out source string
+    logger.info(f"Source string: {query_name} {query_example}")
 
-    # print out its k nearest neighbors
+    # logger.info out its k nearest neighbors
     k_counter = 0
     for i in indices_of_nearest_neighbors:
         # skip any strings that are identical matches to the starting string
         if query_name == names[i] and query_example == examples[i]:
             continue
-        # stop after printing out k articles
+        # stop after logger.infoing out k articles
         if k_counter >= k_nearest_neighbors:
             break
         k_counter += 1
 
-        # print out the similar strings and their distances
-        print(
+        # logger.info out the similar strings and their distances
+        logger.info(
             f"""
         --- Recommendation #{k_counter} (nearest neighbor {k_counter} of {k_nearest_neighbors}) ---
         Name: {names[i]}
@@ -127,31 +130,31 @@ def generate_meme_link_from_id(meme_id, meme_text):
         "redirect": False
     }
 
-    print(body)
+    logger.info(body)
 
     # Send the POST request
     response = requests.post(url, headers=headers, data=json.dumps(body))
 
     # Check the response
     if response.status_code < 300:
-        print("Request was successful.")
-        print("Meme link: ", response.json()['url'])
+        logger.info("Request was successful.")
+        logger.info("Meme link: %s", response.json()['url'])
         return response.json()['url']
     else:
-        print("Request failed. Status code: ", response.status_code)
+        logger.info("Request failed. Status code: %s", response.status_code)
 
 
 
-app = quart_cors.cors(quart.Quart(__name__), allow_origin="https://chat.openai.com")
+app = quart_cors.cors(quart.Quart(__name__), allow_origin="*")
 
 @app.post("/generate_meme")
 async def generate_meme():
     request = await quart.request.get_json(force=True)
-    print("===")
-    print(request["memeText"])
-    print(request["memeTemplateName"])
+    logger.info("===")
+    logger.info(request["memeText"])
+    logger.info(request["memeTemplateName"])
     if "memeUseCase" in request.keys():
-        print(request["memeUseCase"])
+        logger.info(request["memeUseCase"])
     meme_id = get_meme_id(request["memeText"], request["memeTemplateName"])
     link = generate_meme_link_from_id(meme_id, request["memeText"])
     if link is None:
