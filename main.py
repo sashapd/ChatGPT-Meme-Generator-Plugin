@@ -1,3 +1,4 @@
+import aiohttp
 import json
 import requests
 import logging
@@ -111,7 +112,7 @@ def get_meme_id(query_example, query_name="", query_use_case=""):
     )[0]
     return df.loc[index, 'id']
 
-def generate_meme_link_from_id(meme_id, meme_text):
+async def generate_meme_link_from_id(meme_id, meme_text):
     # Define the URL
     url = "https://api.memegen.link/templates/" + meme_id
 
@@ -133,21 +134,21 @@ def generate_meme_link_from_id(meme_id, meme_text):
     logger.info(body)
 
     # Send the POST request
-    response = requests.post(url, headers=headers, data=json.dumps(body))
-
-    # Check the response
-    if response.status_code < 300:
-        logger.info("Request was successful.")
-        logger.info("Meme link: %s", response.json()['url'])
-        return response.json()['url']
-    else:
-        logger.info("Request failed. Status code: %s", response.status_code)
-
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers, data=json.dumps(body)) as response:
+            # Check the response
+            if response.status < 300:
+                logger.info("Request was successful.")
+                json_response = await response.json()
+                logger.info("Meme link: %s", json_response['url'])
+                return json_response['url']
+            else:
+                logger.info("Request failed. Status code: %s", response.status)
 
 
 app = quart_cors.cors(quart.Quart(__name__), allow_origin="*")
 
-@app.post("/generate_meme")
+@app.route("/generate_meme", methods=['POST'])
 async def generate_meme():
     request = await quart.request.get_json(force=True)
     logger.info("===")
@@ -156,7 +157,7 @@ async def generate_meme():
     if "memeUseCase" in request.keys():
         logger.info(request["memeUseCase"])
     meme_id = get_meme_id(request["memeText"], request["memeTemplateName"])
-    link = generate_meme_link_from_id(meme_id, request["memeText"])
+    link = await generate_meme_link_from_id(meme_id, request["memeText"])
     if link is None:
         return quart.Response(response='BAD', status=400)
     return quart.jsonify({"meme_link": link}), 200

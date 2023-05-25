@@ -7,3 +7,4 @@ matplotlib
 scipy
 scikit-learn
 plotly
+aiohttp
