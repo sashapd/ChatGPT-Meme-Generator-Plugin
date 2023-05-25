@@ -97,6 +97,9 @@ def get_meme_from_strings(query_name, query_example, model=EMBEDDING_MODEL):
 
     return indx
 
+def preprocess_query(query):
+    return '\n'.join([line for line in query.split("\n") if line != ''])
+
 def get_meme_id(query_example, query_name="", query_use_case=""):
     index = get_meme_from_strings(
         query_name=query_name,  
@@ -153,6 +156,7 @@ async def generate_meme():
     logger.info("Meme Template: ")
     logger.info(memeTemplateName)
     logger.info("Getting meme id")
+    memeText = preprocess_query(memeText)
     meme_id = get_meme_id(memeText, memeTemplateName)
     logger.info("Generating link")
     link = await generate_meme_link_from_id(meme_id, memeText)
