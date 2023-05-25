@@ -20,6 +20,8 @@ from openai.embeddings_utils import (
     indices_of_nearest_neighbors_from_distances,
 )
 
+logger.info("MEME PLUGIN STARTED")
+
 # constants
 EMBEDDING_MODEL = "text-embedding-ada-002"
 dataset_path = "data/output.tsv"
