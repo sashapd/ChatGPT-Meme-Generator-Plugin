@@ -1,5 +1,6 @@
 import json
 import requests
+import logging
 
 import quart
 import quart_cors
@@ -37,8 +38,8 @@ def embedding_from_string(string, model = EMBEDDING_MODEL, embedding_cache=embed
     if (string, model) not in embedding_cache.keys():
         embedding_cache[(string, model)] = get_embedding(string, model)
         print("CALCULATING EMBEDDING!!!!!")
-        with open(embedding_cache_path, "wb") as embedding_cache_file:
-            pickle.dump(embedding_cache, embedding_cache_file)
+        #with open(embedding_cache_path, "wb") as embedding_cache_file:
+        #    pickle.dump(embedding_cache, embedding_cache_file)
     return embedding_cache[(string, model)]
 
 def get_meme_from_strings(names, examples, query_name, query_example, k_nearest_neighbors, model=EMBEDDING_MODEL):
