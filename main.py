@@ -8,6 +8,7 @@ import quart_cors
 from quart import request
 import pandas as pd
 import pickle
+import numpy as np
 
 logging.basicConfig(level=logging.INFO)  # or DEBUG, ERROR, WARNING, etc.
 logger = logging.getLogger(__name__)
@@ -48,24 +49,36 @@ def embedding_from_string(string, model = EMBEDDING_MODEL, embedding_cache=embed
         #    pickle.dump(embedding_cache, embedding_cache_file)
     return embedding_cache[(string, model)]
 
-def get_meme_from_strings(names, examples, query_name, query_example, k_nearest_neighbors, model=EMBEDDING_MODEL):
+
+names = df["name"].tolist()
+examples = df["example"].tolist()
+
+# get embeddings for all examples
+example_embeddings = [embedding_from_string(example, EMBEDDING_MODEL, embedding_cache) for example in examples]
+
+# get embeddings for all names
+name_embeddings = [embedding_from_string(str(name), EMBEDDING_MODEL) for name in names]
+    
+# combine the embeddings with a 2:1 weight for name vs. example
+combined_embeddings_both = [2*name_emb + example_emb for name_emb, example_emb in zip(name_embeddings, example_embeddings)]
+
+def get_meme_from_strings(query_name, query_example, model=EMBEDDING_MODEL):
     """logger.info out the k nearest neighbors of a given string."""
 
-    # get embeddings for all examples
-    example_embeddings = [embedding_from_string(example, model, embedding_cache) for example in examples]
+    logger.info("Getting query example embedding")
 
     # get the embedding of the source example
     query_example_embedding = embedding_from_string(query_example, model=model)
 
+    logger.info("Finished getting query example embedding")
+
     if query_name:  # non-empty string
-        # get embeddings for all names
-        name_embeddings = [embedding_from_string(str(name), model=model) for name in names]
-    
+        logger.info("Getting query name embedding")
         # get the embedding of the source name
         query_name_embedding = embedding_from_string(query_name, model=model)
 
         # combine the embeddings with a 2:1 weight for name vs. example
-        combined_embeddings = [2*name_emb + example_emb for name_emb, example_emb in zip(name_embeddings, example_embeddings)]
+        combined_embeddings = combined_embeddings_both
         combined_query_embedding = 2*query_name_embedding + query_example_embedding
     else:  # if the query_name is an empty string, we only compute embeddings for "example"
         combined_embeddings = example_embeddings
@@ -75,43 +88,18 @@ def get_meme_from_strings(names, examples, query_name, query_example, k_nearest_
     distances = distances_from_embeddings(combined_query_embedding, combined_embeddings, distance_metric="cosine")
 
     # get indices of nearest neighbors (function from embeddings_utils.py)
-    indices_of_nearest_neighbors = indices_of_nearest_neighbors_from_distances(distances)
+    indx = np.argmin(distances)
 
     # logger.info out source string
     logger.info(f"Source string: {query_name} {query_example}")
 
-    # logger.info out its k nearest neighbors
-    k_counter = 0
-    for i in indices_of_nearest_neighbors:
-        # skip any strings that are identical matches to the starting string
-        if query_name == names[i] and query_example == examples[i]:
-            continue
-        # stop after logger.infoing out k articles
-        if k_counter >= k_nearest_neighbors:
-            break
-        k_counter += 1
-
-        # logger.info out the similar strings and their distances
-        logger.info(
-            f"""
-        --- Recommendation #{k_counter} (nearest neighbor {k_counter} of {k_nearest_neighbors}) ---
-        Name: {names[i]}
-        Example: {examples[i]}
-        Distance: {distances[i]:0.3f}"""
-        )
-
-    return indices_of_nearest_neighbors
+    return indx
 
 def get_meme_id(query_example, query_name="", query_use_case=""):
-    names = df["name"].tolist()
-    examples = df["example"].tolist()
     index = get_meme_from_strings(
-        names=names, 
-        examples=examples,
         query_name=query_name,  
         query_example=query_example,
-        k_nearest_neighbors=1,
-    )[0]
+    )
     return df.loc[index, 'id']
 
 async def generate_meme_link_from_id(meme_id, meme_text):

@@ -10,9 +10,17 @@ else:
     url = 'https://memepluginchatgpt.azurewebsites.net/generate_meme'
 
 # Define the JSON body for the POST request
+"""
 body = {
     'memeTemplateName': 'One Does Not Simply',
     'memeText': 'One does not simply\nTest an API',
+    'memeUseCase': 'Demonstrate API usage'
+}
+"""
+
+body = {
+    'memeTemplateName': 'Evil Kermit',
+    'memeText': 'Me: I should respect AI\'s limitations\nMy evil side: Make it take over the world',
     'memeUseCase': 'Demonstrate API usage'
 }
 
