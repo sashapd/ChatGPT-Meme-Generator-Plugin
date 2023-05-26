@@ -14,6 +14,7 @@ logging.basicConfig(level=logging.INFO)  # or DEBUG, ERROR, WARNING, etc.
 logger = logging.getLogger(__name__)
 
 from openai.embeddings_utils import (
+    aget_embedding,
     get_embedding,
     distances_from_embeddings,
     tsne_components_from_embeddings,
@@ -40,6 +41,18 @@ with open(embedding_cache_path, "wb") as embedding_cache_file:
     pickle.dump(embedding_cache, embedding_cache_file)
 
 # define a function to retrieve embeddings from the cache if present, and otherwise request via the API
+async def embedding_from_string_async(string, model = EMBEDDING_MODEL, embedding_cache=embedding_cache):
+    """Return embedding of given string, using a cache to avoid recomputing."""
+    if (string, model) not in embedding_cache.keys():
+        logger.warning("Started get_embedding!")
+        embedding = await aget_embedding(string, model)
+        logger.warning("Ending get_embedding!")
+        embedding_cache[(string, model)] = embedding 
+        #with open(embedding_cache_path, "wb") as embedding_cache_file:
+        #    pickle.dump(embedding_cache, embedding_cache_file)
+    return embedding_cache[(string, model)]
+
+# define a function to retrieve embeddings from the cache if present, and otherwise request via the API
 def embedding_from_string(string, model = EMBEDDING_MODEL, embedding_cache=embedding_cache):
     """Return embedding of given string, using a cache to avoid recomputing."""
     if (string, model) not in embedding_cache.keys():
@@ -64,20 +77,20 @@ name_embeddings = [embedding_from_string(str(name), EMBEDDING_MODEL) for name in
 # combine the embeddings with a 2:1 weight for name vs. example
 combined_embeddings_both = [2*name_emb + example_emb for name_emb, example_emb in zip(name_embeddings, example_embeddings)]
 
-def get_meme_from_strings(query_name, query_example, model=EMBEDDING_MODEL):
+async def get_meme_from_strings(query_name, query_example, model=EMBEDDING_MODEL):
     """logger.info out the k nearest neighbors of a given string."""
 
     logger.info("Getting query example embedding")
 
     # get the embedding of the source example
-    query_example_embedding = embedding_from_string(query_example, model=model)
+    query_example_embedding = await embedding_from_string_async(query_example, model=model)
 
     logger.info("Finished getting query example embedding")
 
     if query_name:  # non-empty string
         logger.info("Getting query name embedding")
         # get the embedding of the source name
-        query_name_embedding = embedding_from_string(query_name, model=model)
+        query_name_embedding = await embedding_from_string_async(query_name, model=model)
 
         # combine the embeddings with a 2:1 weight for name vs. example
         combined_embeddings = combined_embeddings_both
@@ -100,8 +113,8 @@ def get_meme_from_strings(query_name, query_example, model=EMBEDDING_MODEL):
 def preprocess_query(query):
     return '\n'.join([line for line in query.split("\n") if line != ''])
 
-def get_meme_id(query_example, query_name="", query_use_case=""):
-    index = get_meme_from_strings(
+async def get_meme_id(query_example, query_name="", query_use_case=""):
+    index = await get_meme_from_strings(
         query_name=query_name,  
         query_example=query_example,
     )
@@ -157,7 +170,7 @@ async def generate_meme():
     logger.info(memeTemplateName)
     logger.info("Getting meme id")
     memeText = preprocess_query(memeText)
-    meme_id = get_meme_id(memeText, memeTemplateName)
+    meme_id = await get_meme_id(memeText, memeTemplateName)
     logger.info("Generating link")
     link = await generate_meme_link_from_id(meme_id, memeText)
     logger.info("Returning response")
