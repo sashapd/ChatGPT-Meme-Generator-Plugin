@@ -158,27 +158,38 @@ app = quart_cors.cors(quart.Quart(__name__), allow_origin="*")
 
 @app.route("/generate_meme", methods=['POST'])
 async def generate_meme():
-    request = await quart.request.get_json(force=True)
-    logger.info("===")
-    memeText = request["memeText"]
-    logger.info(memeText)
-    if "memeTemplateName" in request:
-        memeTemplateName = request["memeTemplateName"]
-    else:
-        memeTemplateName = ""
-    logger.info("Meme Template: ")
-    logger.info(memeTemplateName)
-    logger.info("Getting meme id")
-    memeText = preprocess_query(memeText)
-    meme_id = await get_meme_id(memeText, memeTemplateName)
-    logger.info("Generating link")
-    link = await generate_meme_link_from_id(meme_id, memeText)
-    logger.info("Returning response")
-    if link is None:
-        logger.info("Response: fail")
-        return quart.Response(response='BAD', status=400)
-    logger.info("Response: success")
-    return quart.jsonify({"meme_link": link}), 200
+    try:
+        request = await quart.request.get_json(force=True)
+        logger.info("===")
+        memeText = request["memeText"]
+        logger.info(memeText)
+        if "memeTemplateName" in request:
+            memeTemplateName = request["memeTemplateName"]
+        else:
+            memeTemplateName = ""
+        if len(memeTemplateName) + len(memeText) > 100:
+            logger.info("Text too long")
+            return quart.jsonify({"error": "Failed to generate meme link due input being too long."}), 400
+        if len(memeText) <= 1:
+            logger.info("Meme text empty")
+            return quart.jsonify({"error": "Failed to generate meme due to meme text being empty."}), 400
+        logger.info("Meme Template: ")
+        logger.info(memeTemplateName)
+        logger.info("Getting meme id")
+        memeText = preprocess_query(memeText)
+        meme_id = await get_meme_id(memeText, memeTemplateName)
+        logger.info("Generating link")
+        link = await generate_meme_link_from_id(meme_id, memeText)
+        logger.info("Returning response")
+        if link is None:
+            logger.info("Response: fail")
+            return quart.jsonify({"error": "Failed to generate meme link due to service fetch failure."}), 500
+        logger.info("Response: success")
+        return quart.jsonify({"meme_link": link}), 200
+    except Exception as e:
+        logger.error(f"An error occurred: {str(e)}")
+        return quart.jsonify({"error": "An unexpected error occurred. Please try again later."}), 500
+
 
 @app.get("/logo.png")
 async def plugin_logo():

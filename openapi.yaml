@@ -20,16 +20,39 @@ paths:
                 memeTemplateName:
                   type: string
                   description: The name of the meme template. Leave empty if unclear, but try to guess if possible.
-                  default: ''
                 memeText:
                   type: string
                   description: The text of the meme. If user did not specify exactly, creatively make your own based on user wishes. 2 Lines by default separated by single newline (unless you know the template requires more such as Expanding brain-4 lines, American Chopper Argument-6 lines).
-                memeUseCase:
-                  type: string
-                  description: Generic scenario for the meme that applies to every instance of the meme image itself. Example for "I'm a Simple Man" meme template that would be "express one's appreciation for things of ordinary nature". Leave empty if unclear.
-                  default: ''
-              required:
-                - memeText
+                  required: true
+              additionalProperties: false
       responses:
         "200":
           description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meme_link:
+                    type: string
+                    description: The link to the generated meme.
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message indicating the reason for the failure.
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message indicating an unexpected error.
