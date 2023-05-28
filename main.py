@@ -213,7 +213,7 @@ async def generate_meme():
         logger.info("Getting meme id")
         memeText = preprocess_query(memeText)
         meme_id = await get_meme_id(memeText, memeTemplateName)
-        if isRetry != "True" and is_wrong_line_num(memeText, meme_id):
+        if str(isRetry) != "True" and is_wrong_line_num(memeText, meme_id):
             return wrong_line_num_response(memeText, meme_id)
         logger.info("Generating link")
         link = await generate_meme_link_from_id(meme_id, memeText)
