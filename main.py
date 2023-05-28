@@ -167,7 +167,7 @@ async def generate_meme():
             memeTemplateName = request["memeTemplateName"]
         else:
             memeTemplateName = ""
-        if len(memeTemplateName) + len(memeText) > 100:
+        if len(memeTemplateName) + len(memeText) > 300:
             logger.info("Text too long")
             return quart.jsonify({"error": "Failed to generate meme link due input being too long."}), 400
         if len(memeText) <= 1:
