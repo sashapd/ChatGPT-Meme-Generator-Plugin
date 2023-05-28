@@ -19,10 +19,14 @@ paths:
               properties:
                 memeTemplateName:
                   type: string
-                  description: The name of the meme template. Leave empty if unclear, but try to guess if possible.
+                  description: The name of the meme template. Leave empty if unclear, but try to guess if possible. This is optional.
                 memeText:
                   type: string
-                  description: The text of the meme. If user did not specify exactly, creatively make your own based on user wishes. 2 Lines by default separated by single newline (unless you know the template requires more such as Expanding brain-4 lines, American Chopper Argument-6 lines).
+                  description: The text of the meme. If user did not specify exactly, creatively make your own based on user wishes. 2 Lines by default separated by single newline (unless you know the template requires more such as Expanding brain-4 lines). Empty lines must not be provided. If it's a retry query rewrite the text so that number of non-empty lines is "correctLineNumber".
+                  required: true
+                isRetry:
+                  type: boolean
+                  description: Indicated whether this is a retry call after error message was returned.
                   required: true
               additionalProperties: false
       responses:
@@ -46,6 +50,24 @@ paths:
                   error:
                     type: string
                     description: Error message indicating the reason for the failure.
+                  memeTemplateName:
+                    type: string
+                    description: The name of the meme template.
+                  retry:
+                    type: boolean
+                    description: Indicator if the model should retry fix the input and retry the operation. Should not be retried more than 2 times.
+                  wrongMemeText:
+                    type: boolean
+                    description: Indicator that model needs to generate new memeText.
+                  exampleMemeText:
+                    type: string
+                    description: An example of the correct meme text for the given template, new memeText should be similar in format, but don't copy the text itself(i.e. changed to what is needed for it to make sense).
+                  linesProvided:
+                    type: integer
+                    description: The number of meme text non-empty lines that model wrongly provided. Empty lines don't count and should not be provided.
+                  correctLineNumber:
+                    type: integer
+                    description: The correct number of non-empty lines required for the meme text.
         "500":
           description: Internal Server Error
           content:

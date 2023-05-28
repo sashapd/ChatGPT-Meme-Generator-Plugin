@@ -153,6 +153,35 @@ async def generate_meme_link_from_id(meme_id, meme_text):
             else:
                 logger.info("Request failed. Status code: %s", response.status)
 
+with open('templates.json', 'r') as f:
+    templates = json.load(f)
+
+def is_wrong_line_num(memeText, meme_id):
+    for template in templates:
+        if 'id' in template and 'name' in template and 'example' in template and 'lines' in template:
+            id, name, example, lines = template['id'], template['name'], template['example'], template['lines']
+            if meme_id == id:
+                lines_provided = memeText.count('\n') + 1
+                return lines_provided != lines
+    return False
+
+def wrong_line_num_response(memeText, meme_id):
+    for template in templates:
+        if 'id' in template and 'name' in template and 'example' in template and 'lines' in template:
+            id, name, example, lines = template['id'], template['name'], template['example']['text'], template['lines']
+            if meme_id == id:
+                lines_provided = memeText.count('\n') + 1
+                body = {"error": f"Wrong number of lines in the meme text, please rewrite the meme text with {lines} non-empty lines.",
+                                      "memeTemplateName": name,
+                                      "retry": True,
+                                      "wrongMemeText": True,
+                                      "exampleMemeTextForTemplate": "\n".join(example),
+                                      "linesProvided": lines_provided,
+                                      "correctLineNumber": lines}
+                logger.info("Wrong lines count: %s", json.dumps(body, indent=4))
+                return quart.jsonify(body), 400
+    return quart.jsonify({"error": "An unexpected error occurred. Please try again later."}), 500
+
 
 app = quart_cors.cors(quart.Quart(__name__), allow_origin="*")
 
@@ -167,6 +196,12 @@ async def generate_meme():
             memeTemplateName = request["memeTemplateName"]
         else:
             memeTemplateName = ""
+        if 'isRetry' in request:
+            isRetry = request["isRetry"]
+            logger.info("Is retry: %s", str(isRetry))
+        else:
+            logger.info("isRetry not in request %s", str(request))
+            isRetry = "False"
         if len(memeTemplateName) + len(memeText) > 300:
             logger.info("Text too long")
             return quart.jsonify({"error": "Failed to generate meme link due input being too long."}), 400
@@ -178,6 +213,8 @@ async def generate_meme():
         logger.info("Getting meme id")
         memeText = preprocess_query(memeText)
         meme_id = await get_meme_id(memeText, memeTemplateName)
+        if isRetry != "True" and is_wrong_line_num(memeText, meme_id):
+            return wrong_line_num_response(memeText, meme_id)
         logger.info("Generating link")
         link = await generate_meme_link_from_id(meme_id, memeText)
         logger.info("Returning response")
