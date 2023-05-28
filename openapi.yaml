@@ -61,7 +61,7 @@ paths:
                     description: Indicator that model needs to generate new memeText.
                   exampleMemeText:
                     type: string
-                    description: An example of the correct meme text for the given template, new memeText should be similar in format, but don't copy the text itself(i.e. changed to what is needed for it to make sense).
+                    description: An example of the correct meme text for the given template, new memeText should be similar in format, but don't copy the text itself(i.e. changed to what is needed for it to make sense). Text in square brackets is for context for the model.
                   linesProvided:
                     type: integer
                     description: The number of meme text non-empty lines that model wrongly provided. Empty lines don't count and should not be provided.

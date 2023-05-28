@@ -781,12 +781,12 @@
 }, {
     "id": "elmo",
     "name": "Elmo Choosing Cocaine",
-    "lines": 4,
+    "lines": 3,
     "overlays": 4,
     "styles": ["default"],
     "blank": "https:\/\/api.memegen.link\/images\/elmo.png",
     "example": {
-        "text": ["Historical Accuracy", "History Channel", "Aliens", "Historical Accuracy"],
+        "text": ["Fruits[Healthy option]", "Me[Elmo]", "Cocaine[Unhealthy option]"],
         "url": "https:\/\/api.memegen.link\/images\/elmo\/Historical_Accuracy\/History_Channel\/Aliens\/Historical_Accuracy.png"
     },
     "source": "https:\/\/knowyourmeme.com\/memes\/elmo-choosing-cocaine",
