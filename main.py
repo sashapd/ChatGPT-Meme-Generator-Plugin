@@ -113,6 +113,12 @@ async def get_meme_from_strings(query_name, query_example, model=EMBEDDING_MODEL
 def preprocess_query(query):
     return '\n'.join([line for line in query.split("\n") if line != ''])
 
+def postprocess_query(meme_id, memeText):
+    memeTextList = memeText.split("\n")
+    if (meme_id == "db" or meme_id == "dg") and len(memeTextList) == 3:
+        memeTextList[0], memeTextList[1] = memeTextList[1], memeTextList[0]
+    return "\n".join(memeTextList)
+
 async def get_meme_id(query_example, query_name="", query_use_case=""):
     index = await get_meme_from_strings(
         query_name=query_name,  
@@ -122,7 +128,7 @@ async def get_meme_id(query_example, query_name="", query_use_case=""):
 
 def contains_non_english_chars(input_string):
     for char in input_string:
-        if ord(char) < 32 or ord(char) > 126:
+        if ord(char) < 1 or ord(char) > 255:
             return True
     return False
 
@@ -224,6 +230,7 @@ async def generate_meme():
         logger.info("Getting meme id")
         memeText = preprocess_query(memeText)
         meme_id = await get_meme_id(memeText, memeTemplateName)
+        memeText = postprocess_query(meme_id, memeText)
         if str(isRetry) != "True" and is_wrong_line_num(memeText, meme_id):
             return wrong_line_num_response(memeText, meme_id)
         logger.info("Generating link")
