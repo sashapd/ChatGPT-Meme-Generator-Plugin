@@ -120,6 +120,12 @@ async def get_meme_id(query_example, query_name="", query_use_case=""):
     )
     return df.loc[index, 'id']
 
+def contains_non_english_chars(input_string):
+    for char in input_string:
+        if ord(char) < 32 or ord(char) > 126:
+            return True
+    return False
+
 async def generate_meme_link_from_id(meme_id, meme_text):
     # Define the URL
     url = "https://api.memegen.link/templates/" + meme_id
@@ -129,12 +135,17 @@ async def generate_meme_link_from_id(meme_id, meme_text):
         "Content-Type": "application/json"
     }
 
+    if contains_non_english_chars(meme_text):
+        font = "notosans"
+    else:
+        font = "impact"
+
     # Define the body of the POST request
     body = {
         "style": ["style1", "style2"],  # replace with actual styles
         "text": meme_text.split("\n"),  # replace with actual text lines
         "layout": "layout",  # replace with actual layout
-        "font": "font",  # replace with actual font
+        "font": font,
         "extension": "extension",  # replace with actual extension
         "redirect": False
     }
